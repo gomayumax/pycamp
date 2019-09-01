@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from functools import reduce
 
 url_list = {
     '2015':'https://pycon.jp/2015/ja/sponsors/',
@@ -7,26 +8,17 @@ url_list = {
     '2017':'https://pycon.jp/2017/ja/sponsors/'
 }
 
-def scraping(url, year):
+def scraping(url):
     res = requests.get(url)
     content = res.content
     soup = BeautifulSoup(content, 'html.parser')
     sponsors = soup.find_all('div', class_='sponsor-content')
-    sponser_list = set()
-    for sponsor in sponsors:
-        name = sponsor.h4.text
-        sponser_list.add(name)
-    return sponser_list
+    return { sponsor.h4.text for sponsor in sponsors}
 
 def main():
-    sponser_set = {}
-    for year in url_list:
-        print(year)
+    sponser_list = [ scraping(url) for url in url_list.values() ]
 
-        sponser_set[year] = scraping(url_list[year], year)
-
-    print(sponser_set['2015'] & sponser_set['2016'] & sponser_set['2017'])
-
+    print(reduce(lambda a, b: a&b, sponser_list))
 
 if __name__ == '__main__':
     main()
